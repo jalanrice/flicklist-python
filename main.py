@@ -37,7 +37,6 @@ terrible_movies = [
 
 def getCurrentWatchlist():
     """ Returns the user's current watchlist """
-
     # for now, we are just pretending
     return [ "Star Wars", "Minions", "Freaky Friday", "My Favorite Martian" ]
 
@@ -84,7 +83,7 @@ class Index(webapp2.RequestHandler):
 
         # if we have an error, make a <p> to display it
         error = self.request.get("error")
-        error_element = "<p class='error'>" + error + "</p>" if error else ""
+        error_element = "<p class='error'>" + cgi.escape(error, quote=True) + "</p>" if error else ""
 
         # combine all the pieces to build the content of our response
         main_content = edit_header + add_form + crossoff_form + error_element
@@ -101,17 +100,25 @@ class AddMovie(webapp2.RequestHandler):
         # look inside the request to figure out what the user typed
         new_movie = self.request.get("new-movie")
 
+
         # TODO 2
         # if the user typed nothing at all, redirect and yell at them
+        if new_movie == "":
+            error = "Please enter a movie."
+            error_escaped = cgi.escape(error, quote=True)
+            self.redirect("/?error=" + error_escaped)
 
 
         # TODO 3
         # if the user wants to add a terrible movie, redirect and yell at them
-
+        if new_movie in terrible_movies:
+            error = "'{0}' isn't worth watching. Add a better movie.".format(new_movie)
+            error_escaped = cgi.escape(error, quote=True)
+            self.redirect("/?error=" + error_escaped)
 
         # TODO 1
         # 'escape' the user's input so that if they typed HTML, it doesn't mess up our site
-
+        new_movie = cgi.escape(new_movie, quote=True)
         # build response content
         new_movie_element = "<strong>" + new_movie + "</strong>"
         sentence = new_movie_element + " has been added to your Watchlist!"
@@ -134,7 +141,7 @@ class CrossOffMovie(webapp2.RequestHandler):
 
             # make a helpful error message
             error = "'{0}' is not in your Watchlist, so you can't cross it off!".format(crossed_off_movie)
-            error_escaped = cgi.escape(error, quote=True)
+            #error_escaped = cgi.escape(error, quote=True)
 
             # redirect to homepage, and include error as a query parameter in the URL
             self.redirect("/?error=" + error_escaped)
